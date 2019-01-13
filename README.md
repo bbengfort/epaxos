@@ -1,5 +1,9 @@
 # ePaxos
 
+[![Build Status](https://travis-ci.com/bbengfort/epaxos.svg?branch=master)](https://travis-ci.com/bbengfort/epaxos)
+[![GoDoc](https://godoc.org/github.com/bbengfort/epaxos?status.svg)](https://godoc.org/github.com/bbengfort/epaxos)
+
+
 **Actor based implementation of the [ePaxos consensus algorithm](http://efficient.github.io/epaxos/).**
 
 ## Quick Start
