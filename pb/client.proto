@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pb;
+
+import "epaxos.proto";
+
+message ProposeRequest {
+    string identity = 1;   // unique identity of the client (for debugging)
+    Operation op = 2;      // the operation being proposed by the client
+}
+
+message ProposeReply {
+    bool success = 1;      // true if the proposal was committed
+    string error = 2;      // if success is false, the associated error message
+    int64 slot = 4;        // the slot of the instance the proposed operation was assigned to
+    string key = 5;        // the key the operation modified
+    bytes value = 6;       // the value of the response if required (e.g. for a read)
+}
