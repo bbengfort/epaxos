@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"encoding/json"
+	"io/ioutil"
 
 	"github.com/bbengfort/epaxos"
 	"github.com/joho/godotenv"
@@ -9,11 +11,11 @@ import (
 )
 
 // Comand variables
-// var (
-// 	config *epaxos.Config
-// 	replica *epaxos.Replica
-// 	client * epaxos.Client
-// )
+var (
+	config *epaxos.Config
+	replica *epaxos.Replica
+	// client * epaxos.Client
+)
 
 func main() {
 	// Load the .env file if it exists
@@ -126,6 +128,18 @@ func main() {
 //===========================================================================
 
 func initConfig(c *cli.Context) (err error) {
+	config = new(epaxos.Config)
+	if cpath := c.String("config"); cpath != "" {
+		var data []byte
+		if data, err = ioutil.ReadFile(cpath); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+
+		if err = json.Unmarshal(data, &config); err != nil {
+			return cli.NewExitError(err, 1)
+		}
+	}
+
 	return nil
 }
 
@@ -134,6 +148,22 @@ func initConfig(c *cli.Context) (err error) {
 //===========================================================================
 
 func serve(c *cli.Context) (err error) {
+	if name := c.String("name"); name != "" {
+		config.Name = name
+	}
+
+	if seed := c.Int64("seed"); seed > 0 {
+		config.Seed = seed
+	}
+
+	if replica, err = epaxos.New(config); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	if err = replica.Listen(); err != nil{
+		return cli.NewExitError(err, 1)
+	}
+
 	return nil
 }
 
@@ -142,9 +172,9 @@ func serve(c *cli.Context) (err error) {
 //===========================================================================
 
 func commit(c *cli.Context) (err error) {
-	return nil
+	return cli.NewExitError("not implemented yet", 1)
 }
 
 func bench(c *cli.Context) (err error) {
-	return nil
+	return cli.NewExitError("not implemented yet", 1)
 }

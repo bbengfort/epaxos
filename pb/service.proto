@@ -6,5 +6,5 @@ import "peer.proto";
 
 service Epaxos {
     rpc Propose (ProposeRequest) returns (ProposeReply) {}
-    rpc Dispatch (stream PeerRequest) returns (stream PeerReply) {}
+    rpc Consensus (stream PeerRequest) returns (stream PeerReply) {}
 }

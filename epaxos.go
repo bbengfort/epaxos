@@ -5,6 +5,7 @@ package epaxos
 
 import (
 	"log"
+	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -32,4 +33,53 @@ func init() {
 
 	// Stop the grpc verbose logging
 	grpclog.SetLogger(noplog.New())
+}
+
+//===========================================================================
+// New ePaxos Instance
+//===========================================================================
+
+// New ePaxos replica with the specified config.
+func New(options *Config) (replica *Replica, err error) {
+	// Create a new configuration from defaults, configuration file, and
+	// the environment; then verify it, returning any errors.
+	config := new(Config)
+	if err = config.Load(); err != nil {
+		return nil, err
+	}
+
+	// Update the configuration with the passed in configuration.
+	if err = config.Update(options); err != nil {
+		return nil, err
+	}
+
+	fmt.Println(config)
+
+	// Set the logging level and the random seed
+	SetLogLevel(uint8(config.LogLevel))
+	if config.Seed != 0 {
+		debug("setting random seed to %d", config.Seed)
+		rand.Seed(config.Seed)
+	}
+
+	// Create and initialize the replica
+	replica = new(Replica)
+	replica.config = config
+	// replica.remotes = make(map[string]*Remote)
+	// replica.clients = make(map[uint64]chan *pb.CommitReply)
+	// replica.log = NewLog(replica)
+	// replica.Metrics = NewMetrics()
+
+	// Create the local replica definition
+	replica.Peer, err = config.GetPeer()
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the remotes from peers
+
+	// Set state to initialized
+	info("epaxos replica with 0 remote peers created")
+	// info("epaxos replica with %d remote peers created", len(replica.remotes))
+	return replica, nil
 }

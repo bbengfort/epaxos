@@ -18,6 +18,9 @@ This should install the `epaxos` command on your system. Create a configuration 
 
 ```json
 {
+  "timeout": "100ms",
+  "aggregate": true,
+  "log_level": 5,
   "peers": [
     {
       "pid": 1,

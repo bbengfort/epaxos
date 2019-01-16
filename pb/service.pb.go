@@ -25,16 +25,16 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 func init() { proto.RegisterFile("service.proto", fileDescriptor_a0b84a42fa06f626) }
 
 var fileDescriptor_a0b84a42fa06f626 = []byte{
-	// 140 bytes of a gzipped FileDescriptorProto
+	// 141 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2d, 0x4e, 0x2d, 0x2a,
 	0xcb, 0x4c, 0x4e, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2a, 0x48, 0x92, 0xe2, 0x49,
 	0xce, 0xc9, 0x4c, 0xcd, 0x2b, 0x81, 0x88, 0x48, 0x71, 0x15, 0xa4, 0xa6, 0x16, 0x41, 0xd8, 0x46,
-	0xb9, 0x5c, 0x6c, 0xae, 0x05, 0x89, 0x15, 0xf9, 0xc5, 0x42, 0x86, 0x5c, 0xec, 0x01, 0x45, 0xf9,
+	0x79, 0x5c, 0x6c, 0xae, 0x05, 0x89, 0x15, 0xf9, 0xc5, 0x42, 0x86, 0x5c, 0xec, 0x01, 0x45, 0xf9,
 	0x05, 0xf9, 0xc5, 0xa9, 0x42, 0x42, 0x7a, 0x05, 0x49, 0x7a, 0x50, 0x4e, 0x50, 0x6a, 0x61, 0x69,
-	0x6a, 0x71, 0x89, 0x94, 0x00, 0x8a, 0x58, 0x41, 0x4e, 0xa5, 0x12, 0x83, 0x90, 0x01, 0x17, 0x87,
-	0x4b, 0x66, 0x71, 0x41, 0x62, 0x49, 0x72, 0x86, 0x10, 0x3f, 0x58, 0x3e, 0x35, 0xb5, 0x08, 0xa6,
-	0x81, 0x17, 0x21, 0x00, 0x56, 0xad, 0xc1, 0x68, 0xc0, 0x98, 0xc4, 0x06, 0xb6, 0xd5, 0x18, 0x10,
-	0x00, 0x00, 0xff, 0xff, 0x0e, 0x4a, 0xcf, 0x8d, 0xa4, 0x00, 0x00, 0x00,
+	0x6a, 0x71, 0x89, 0x94, 0x00, 0x8a, 0x58, 0x41, 0x4e, 0xa5, 0x12, 0x83, 0x90, 0x21, 0x17, 0xa7,
+	0x73, 0x7e, 0x5e, 0x71, 0x6a, 0x5e, 0x71, 0x69, 0xb1, 0x10, 0x3f, 0x58, 0x41, 0x6a, 0x6a, 0x11,
+	0x4c, 0x07, 0x2f, 0x42, 0x00, 0xac, 0x5c, 0x83, 0xd1, 0x80, 0x31, 0x89, 0x0d, 0x6c, 0xad, 0x31,
+	0x20, 0x00, 0x00, 0xff, 0xff, 0x6a, 0x76, 0x4c, 0x9c, 0xa5, 0x00, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -50,7 +50,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EpaxosClient interface {
 	Propose(ctx context.Context, in *ProposeRequest, opts ...grpc.CallOption) (*ProposeReply, error)
-	Dispatch(ctx context.Context, opts ...grpc.CallOption) (Epaxos_DispatchClient, error)
+	Consensus(ctx context.Context, opts ...grpc.CallOption) (Epaxos_ConsensusClient, error)
 }
 
 type epaxosClient struct {
@@ -70,30 +70,30 @@ func (c *epaxosClient) Propose(ctx context.Context, in *ProposeRequest, opts ...
 	return out, nil
 }
 
-func (c *epaxosClient) Dispatch(ctx context.Context, opts ...grpc.CallOption) (Epaxos_DispatchClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Epaxos_serviceDesc.Streams[0], "/pb.Epaxos/Dispatch", opts...)
+func (c *epaxosClient) Consensus(ctx context.Context, opts ...grpc.CallOption) (Epaxos_ConsensusClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Epaxos_serviceDesc.Streams[0], "/pb.Epaxos/Consensus", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &epaxosDispatchClient{stream}
+	x := &epaxosConsensusClient{stream}
 	return x, nil
 }
 
-type Epaxos_DispatchClient interface {
+type Epaxos_ConsensusClient interface {
 	Send(*PeerRequest) error
 	Recv() (*PeerReply, error)
 	grpc.ClientStream
 }
 
-type epaxosDispatchClient struct {
+type epaxosConsensusClient struct {
 	grpc.ClientStream
 }
 
-func (x *epaxosDispatchClient) Send(m *PeerRequest) error {
+func (x *epaxosConsensusClient) Send(m *PeerRequest) error {
 	return x.ClientStream.SendMsg(m)
 }
 
-func (x *epaxosDispatchClient) Recv() (*PeerReply, error) {
+func (x *epaxosConsensusClient) Recv() (*PeerReply, error) {
 	m := new(PeerReply)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func (x *epaxosDispatchClient) Recv() (*PeerReply, error) {
 // EpaxosServer is the server API for Epaxos service.
 type EpaxosServer interface {
 	Propose(context.Context, *ProposeRequest) (*ProposeReply, error)
-	Dispatch(Epaxos_DispatchServer) error
+	Consensus(Epaxos_ConsensusServer) error
 }
 
 func RegisterEpaxosServer(s *grpc.Server, srv EpaxosServer) {
@@ -129,25 +129,25 @@ func _Epaxos_Propose_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Epaxos_Dispatch_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(EpaxosServer).Dispatch(&epaxosDispatchServer{stream})
+func _Epaxos_Consensus_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(EpaxosServer).Consensus(&epaxosConsensusServer{stream})
 }
 
-type Epaxos_DispatchServer interface {
+type Epaxos_ConsensusServer interface {
 	Send(*PeerReply) error
 	Recv() (*PeerRequest, error)
 	grpc.ServerStream
 }
 
-type epaxosDispatchServer struct {
+type epaxosConsensusServer struct {
 	grpc.ServerStream
 }
 
-func (x *epaxosDispatchServer) Send(m *PeerReply) error {
+func (x *epaxosConsensusServer) Send(m *PeerReply) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func (x *epaxosDispatchServer) Recv() (*PeerRequest, error) {
+func (x *epaxosConsensusServer) Recv() (*PeerRequest, error) {
 	m := new(PeerRequest)
 	if err := x.ServerStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -166,8 +166,8 @@ var _Epaxos_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "Dispatch",
-			Handler:       _Epaxos_Dispatch_Handler,
+			StreamName:    "Consensus",
+			Handler:       _Epaxos_Consensus_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
