@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bbengfort/alia/out"
 	"github.com/bbengfort/epaxos/pb"
 	"github.com/bbengfort/x/peers"
 	"google.golang.org/grpc"
@@ -121,7 +120,7 @@ func (c *Remote) messenger() {
 		// If we're not online try to re-establish the connection
 		if !c.online {
 			if err := c.connect(); err != nil {
-				out.Caution("dropped %s message to %s (%s): could not connect", msg.Type, c.Name, c.Endpoint(true))
+				caution("dropped %s message to %s (%s): could not connect", msg.Type, c.Name, c.Endpoint(true))
 				c.close()
 				continue
 			}
@@ -130,7 +129,7 @@ func (c *Remote) messenger() {
 		// Send the peer request message
 		if err := c.stream.Send(msg); err != nil {
 			// go offline if there was an error sending the message
-			out.Caution("dropped %s message to %s (%s): could not send", msg.Type, c.Name, c.Endpoint(true))
+			caution("dropped %s message to %s (%s): could not send", msg.Type, c.Name, c.Endpoint(true))
 			c.close()
 			continue
 		}
@@ -139,9 +138,9 @@ func (c *Remote) messenger() {
 		rep, err := c.stream.Recv()
 		if err != nil {
 			if err != io.EOF {
-				out.Caution(err.Error())
+				caution(err.Error())
 			} else {
-				out.Caution("stream to %s (%s) closed by remote", c.Name, c.Endpoint(true))
+				caution("stream to %s (%s) closed by remote", c.Name, c.Endpoint(true))
 			}
 			c.stream = nil
 			c.close()
@@ -150,7 +149,7 @@ func (c *Remote) messenger() {
 
 		// Dispatch the event to the replica
 		if err := c.actor.Dispatch(replyEvent(rep)); err != nil {
-			out.Caution("could not dispatch message from %s (%s): %s", c.Name, c.Endpoint(true), err)
+			caution("could not dispatch message from %s (%s): %s", c.Name, c.Endpoint(true), err)
 		}
 
 	}
