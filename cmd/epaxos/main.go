@@ -1,20 +1,22 @@
 package main
 
 import (
-	"os"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/bbengfort/epaxos"
+	"github.com/bbengfort/epaxos/pb"
 	"github.com/joho/godotenv"
 	"github.com/urfave/cli"
 )
 
 // Comand variables
 var (
-	config *epaxos.Config
+	config  *epaxos.Config
 	replica *epaxos.Replica
-	// client * epaxos.Client
+	client  *epaxos.Client
 )
 
 func main() {
@@ -63,14 +65,18 @@ func main() {
 			},
 		},
 		{
-			Name:     "commit",
-			Usage:    "commit an entry to the distributed log",
-			Action:   commit,
+			Name:     "propose",
+			Usage:    "propose an operation be made to the state store",
+			Action:   propose,
 			Category: "client",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "a, addr",
 					Usage: "name or address of replica to connect to",
+				},
+				cli.IntFlag{
+					Name:  "t, type",
+					Usage: "access type of the operation",
 				},
 				cli.StringFlag{
 					Name:  "k, key",
@@ -160,7 +166,7 @@ func serve(c *cli.Context) (err error) {
 		return cli.NewExitError(err, 1)
 	}
 
-	if err = replica.Listen(); err != nil{
+	if err = replica.Listen(); err != nil {
 		return cli.NewExitError(err, 1)
 	}
 
@@ -171,8 +177,25 @@ func serve(c *cli.Context) (err error) {
 // Client Commands
 //===========================================================================
 
-func commit(c *cli.Context) (err error) {
-	return cli.NewExitError("not implemented yet", 1)
+func propose(c *cli.Context) (err error) {
+	// Connect the client to the cluster
+	if client, err = epaxos.NewClient(c.String("addr"), config); err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	// Get the proposal args from cli
+	access := pb.AccessType(int32(c.Int("type")))
+	key := c.String("key")
+	value := []byte(c.String("value"))
+
+	// Make the request
+	rep, err := client.Propose(access, key, value)
+	if err != nil {
+		return cli.NewExitError(err, 1)
+	}
+
+	fmt.Println(rep)
+	return nil
 }
 
 func bench(c *cli.Context) (err error) {

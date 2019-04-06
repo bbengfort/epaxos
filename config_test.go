@@ -35,7 +35,7 @@ var _ = Describe("Config", func() {
 
 		// Validate configuration defaults
 		Ω(conf.Timeout).Should(Equal("500ms"))
-		Ω(conf.Aggregate).Should(BeTrue())
+		Ω(conf.Aggregate).Should(BeFalse())
 		Ω(conf.LogLevel).Should(Equal(3))
 
 		// Validate non configurations

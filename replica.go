@@ -85,6 +85,8 @@ func (r *Replica) Handle(e Event) error {
 	trace("%s event received: %v", e.Type(), e.Value())
 
 	switch e.Type() {
+	case ProposeRequestEvent:
+		return r.onProposeRequest(e)
 	case BeaconRequestEvent:
 		return r.onBeaconRequest(e)
 	case BeaconReplyEvent:
