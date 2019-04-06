@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"time"
 
@@ -27,7 +28,8 @@ type Config struct {
 	Name      string       `required:"false" json:"name,omitempty"`             // unique name of the local replica, hostname by default
 	Seed      int64        `required:"false" json:"seed,omitempty"`             // random seed to initialize random generator
 	Timeout   string       `default:"500ms" validate:"duration" json:"timeout"` // timeout to wait for responses (parseable duration)
-	Aggregate bool         `default:"true" json:"aggregate"`                    // aggregate operations from multiple concurrent clients
+	Aggregate bool         `default:"false" json:"aggregate"`                   // aggregate operations from multiple concurrent clients
+	Thrifty   bool         `default:"false" json:"thrifty"`                     // whether or not to send thrifty quorum messages
 	LogLevel  int          `default:"3" validate:"uint" json:"log_level"`       // verbosity of logging, lower is more verbose
 	Peers     []peers.Peer `json:"peers"`                                       // definition of all hosts on the network
 
@@ -151,6 +153,49 @@ func (c *Config) GetRemotes() (remotes []peers.Peer, err error) {
 	}
 
 	return remotes, nil
+}
+
+// GetThrifty returns the peers to send broadcast messages to. If not thrifty, it
+// returns nil, otherwise it returns the next n peers by PID where n is one less than
+// the majority of replicas.
+func (c *Config) GetThrifty() []uint16 {
+	if !c.Thrifty {
+		return nil
+	}
+
+	// Get the local peer to identify placement in the peers list
+	local, err := c.GetPeer()
+	if err != nil {
+		return nil
+	}
+
+	// Create a sorted list of PIDs
+	pids := make([]uint16, 0, len(c.Peers))
+	for _, peer := range c.Peers {
+		pids = append(pids, peer.PID)
+	}
+
+	sort.SliceStable(pids, func(i, j int) bool {
+		return pids[i] < pids[j]
+	})
+
+	// Determine the index of the local peer in the list of sorted PIDs
+	var idx int
+	for jdx, pid := range pids {
+		if local.PID == pid {
+			idx = jdx
+		}
+	}
+
+	// Determine 1 less than the majority thrifty peers
+	n := len(pids) / 2
+	thrifty := make([]uint16, 0, n)
+	for i := 1; i <= n; i++ {
+		thrifty = append(thrifty, pids[(idx+i)%len(pids)])
+	}
+
+	// Return the thrifty peers
+	return thrifty
 }
 
 // GetPath searches possible configuration paths returning the first path it

@@ -4,13 +4,16 @@ Package epaxos implements the ePaxos consensus algorithm.
 package epaxos
 
 import (
-	"log"
 	"fmt"
+	"log"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/bbengfort/epaxos/pb"
 	"github.com/bbengfort/x/noplog"
+	"github.com/bbengfort/x/peers"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -53,8 +56,6 @@ func New(options *Config) (replica *Replica, err error) {
 		return nil, err
 	}
 
-	fmt.Println(config)
-
 	// Set the logging level and the random seed
 	SetLogLevel(uint8(config.LogLevel))
 	if config.Seed != 0 {
@@ -65,8 +66,8 @@ func New(options *Config) (replica *Replica, err error) {
 	// Create and initialize the replica
 	replica = new(Replica)
 	replica.config = config
-	// replica.remotes = make(map[string]*Remote)
-	// replica.clients = make(map[uint64]chan *pb.CommitReply)
+	replica.thrifty = config.GetThrifty()
+	replica.clients = make(map[uint64]chan *pb.ProposeReply)
 	// replica.log = NewLog(replica)
 	// replica.Metrics = NewMetrics()
 
@@ -76,10 +77,30 @@ func New(options *Config) (replica *Replica, err error) {
 		return nil, err
 	}
 
-	// Create the remotes from peers
+	// Fetch all remote peers (e.g. all peers but self)
+	// NOTE: we expect peers to be sorted by PID
+	var peers []peers.Peer
+	if peers, err = config.GetRemotes(); err != nil {
+		return nil, err
+	}
+
+	// Make the remotes to send message to remote peers
+	replica.remotes = make(Remotes)
+	for _, peer := range peers {
+		if replica.remotes[peer.PID], err = NewRemote(peer, replica); err != nil {
+			return nil, err
+		}
+	}
 
 	// Set state to initialized
-	info("epaxos replica with 0 remote peers created")
-	// info("epaxos replica with %d remote peers created", len(replica.remotes))
+	info("epaxos replica with %d remote peers created", len(replica.remotes))
+	if replica.thrifty != nil {
+		pids := make([]string, 0, len(replica.thrifty))
+		for _, p := range replica.thrifty {
+			pids = append(pids, fmt.Sprintf("%d", p))
+		}
+
+		info("thrifty communications to replica PIDs %s", strings.Join(pids, ", "))
+	}
 	return replica, nil
 }

@@ -15,11 +15,11 @@ import (
 type Replica struct {
 	peers.Peer
 
-	// Network Definition
-	config *Config
-	events chan Event
-	// remotes map[string]*Remote
-	// clients map[uint64]chan *pb.ProposeReply
+	config  *Config                          // the static configuration of the replica
+	events  chan Event                       // serialize events in the system in the order they're received
+	remotes Remotes                          // connections to remote peers to send messages to
+	thrifty []uint16                         // the peers to send broadcast messages to
+	clients map[uint64]chan *pb.ProposeReply // connected clients awaiting a reply
 }
 
 // Listen for messages from peers and clients and run the event loop.
@@ -40,6 +40,11 @@ func (r *Replica) Listen() error {
 	srv := grpc.NewServer()
 	pb.RegisterEpaxosServer(srv, r)
 	go srv.Serve(sock)
+
+	// Open up connections to remote peers
+	if err := r.Connect(); err != nil {
+		return err
+	}
 
 	// Run the event handling loop
 	if r.config.Aggregate {
@@ -80,11 +85,37 @@ func (r *Replica) Handle(e Event) error {
 	trace("%s event received: %v", e.Type(), e.Value())
 
 	switch e.Type() {
+	case BeaconRequestEvent:
+		return r.onBeaconRequest(e)
+	case BeaconReplyEvent:
+		return r.onBeaconReply(e)
 	case ErrorEvent:
 		return e.Value().(error)
 	default:
 		return fmt.Errorf("no handler identified for event %s", e.Type())
 	}
+}
+
+// Connect the replica to its remote peers. If in thrifty mode, only connects to its
+// thrifty neighbors rather than establishing connections to all peers.
+func (r *Replica) Connect() error {
+	if r.thrifty != nil {
+		// Only open up connections to thrifty peers
+		for _, pid := range r.thrifty {
+			if err := r.remotes[pid].Connect(); err != nil {
+				return err
+			}
+		}
+	} else {
+		// Open up connections to all peers
+		for _, remote := range r.remotes {
+			if err := remote.Connect(); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 //===========================================================================

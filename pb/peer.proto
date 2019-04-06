@@ -13,6 +13,7 @@ enum Type {
     PREACCEPT = 1;
     ACCEPT = 2;
     COMMIT = 3;
+    BEACON = 4;
 }
 
 // A wrapper message that can contain one of the request message types.
@@ -26,6 +27,7 @@ message PeerRequest {
         PreacceptRequest preaccept = 11;
         AcceptRequest accept = 12;
         CommitRequest commit = 13;
+        BeaconRequest beacon = 14;
     }
 }
 
@@ -41,5 +43,6 @@ message PeerReply {
         PreacceptReply preaccept = 11;
         AcceptReply accept = 12;
         CommitReply commit = 13;
+        BeaconReply beacon = 14;
     }
 }

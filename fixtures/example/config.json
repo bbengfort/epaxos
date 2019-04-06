@@ -1,7 +1,8 @@
 {
   "timeout": "400ms",
-  "log_level": 4,
-  "aggregate": false, 
+  "log_level": 2,
+  "aggregate": false,
+  "thrifty": true,
   "peers": [
     {
       "pid": 1,

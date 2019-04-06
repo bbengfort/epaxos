@@ -33,6 +33,15 @@ func (r *Replica) Propose(ctx context.Context, in *pb.ProposeRequest) (*pb.Propo
 // primary replica process. This method waits for the handler to create a reply before
 // receiving the next message.
 func (r *Replica) Consensus(stream pb.Epaxos_ConsensusServer) (err error) {
+	// currently connected remote peer for logging
+	var peer string
+
+	defer func() {
+		if peer != "" {
+			info("%s disconnected", peer)
+		}
+	}()
+
 	// Continuously receive messages on the stream
 	for {
 		var in *pb.PeerRequest
@@ -43,17 +52,15 @@ func (r *Replica) Consensus(stream pb.Epaxos_ConsensusServer) (err error) {
 			return err
 		}
 
+		if peer == "" {
+			peer = in.Sender
+			info("%s connected", peer)
+		}
+
 		// Unwrap the message and create the specific event type
-		var e *event
-		switch in.Type {
-		case pb.Type_PREACCEPT:
-			e = &event{etype: PreacceptRequestEvent, value: in.GetPreaccept()}
-		case pb.Type_ACCEPT:
-			e = &event{etype: AcceptRequestEvent, value: in.GetAccept()}
-		case pb.Type_COMMIT:
-			e = &event{etype: CommitRequestEvent, value: in.GetCommit()}
-		default:
-			return fmt.Errorf("could not handle message of type %s", in.Type)
+		e := requestEvent(in)
+		if e.Type() == UnknownEvent {
+			return fmt.Errorf("received unknown message type from %s", in.Sender)
 		}
 
 		// Create the source to wait for the reply

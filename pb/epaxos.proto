@@ -77,3 +77,18 @@ message CommitReply {
     int64 slot = 1;               // the slot of the instance being committed (for retrieval from the log at the leader)
 }
 
+// Beacon messages are used to establish links and send local state to the remote as a
+// state-checking heartbeat to ensure consensus is working properly.
+message BeaconRequest {
+    bool quorumMember = 1;        // if the replica is part of the quorum (usually true)
+    int64 replica = 2;            // the replica id for log purposes
+    repeated int64 slots = 3;     // the current log index for each replica
+    repeated int64 commits = 4;   // the current commit index for each replica
+}
+
+message BeaconReply {
+    bool quorumMember = 1;        // if the replica is part of the quorum (usually true)
+    int64 replica = 2;            // the replica id for log purposes
+    repeated int64 slots = 3;     // the current log index for each replica
+    repeated int64 commits = 4;   // the current commit index for each replica
+}
