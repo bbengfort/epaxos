@@ -1,0 +1,60 @@
+{
+  "name": "bravo",
+  "seed": 42,
+  "timeout": "400ms",
+  "log_level": 2,
+  "aggregate": true,
+  "thrifty": true,
+  "uptime": "15m",
+  "peers": [
+    {
+      "pid": 1,
+      "name": "alpha",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3264
+    },
+    {
+      "pid": 2,
+      "name": "bravo",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3265
+    },
+    {
+      "pid": 3,
+      "name": "charlie",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3266
+    },
+    {
+      "pid": 4,
+      "name": "delta",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3267
+    },
+    {
+      "pid": 5,
+      "name": "echo",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3268
+    },
+    {
+      "pid": 6,
+      "name": "foxtrot",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3269
+    },
+    {
+      "pid": 7,
+      "name": "golf",
+      "ip_address": "127.0.0.1",
+      "domain": "localhost",
+      "port": 3270
+    }
+  ]
+}

@@ -15,10 +15,13 @@ import (
 type Replica struct {
 	peers.Peer
 
+	quorum  uint32                           // number of replicas required for a quorum
+	logs    *Logs                            // a 2D log of operations to apply to state machine
 	config  *Config                          // the static configuration of the replica
 	events  chan Event                       // serialize events in the system in the order they're received
 	remotes Remotes                          // connections to remote peers to send messages to
-	thrifty []uint16                         // the peers to send broadcast messages to
+	thrifty []uint32                         // the peers to send broadcast messages to
+	nops    uint64                           // the number of operations recieved (TODO: replace with instances)
 	clients map[uint64]chan *pb.ProposeReply // connected clients awaiting a reply
 }
 
@@ -87,6 +90,10 @@ func (r *Replica) Handle(e Event) error {
 	switch e.Type() {
 	case ProposeRequestEvent:
 		return r.onProposeRequest(e)
+	case PreacceptRequestEvent:
+		return r.onPreacceptRequest(e)
+	case PreacceptReplyEvent:
+		return r.onPreacceptReply(e)
 	case BeaconRequestEvent:
 		return r.onBeaconRequest(e)
 	case BeaconReplyEvent:
@@ -118,6 +125,41 @@ func (r *Replica) Connect() error {
 	}
 
 	return nil
+}
+
+//===========================================================================
+// Communication Helpers
+//===========================================================================
+
+// Broadcast a request to all members in the quorum using thrifty communications if
+// so configured. The toall flag forces the request to be broadcast even if thrifty.
+func (r *Replica) Broadcast(req *pb.PeerRequest, toall bool) {
+	if r.thrifty == nil || toall {
+		for _, remote := range r.remotes {
+			remote.Send(req)
+		}
+	} else {
+		for _, pid := range r.thrifty {
+			r.remotes[pid].Send(req)
+		}
+	}
+}
+
+// Commit an instance and broadcast the commit to all members in the quroum and reply
+// to the client(s) that initiated the proposal.
+func (r *Replica) Commit(inst *pb.Instance) {
+	// TODO: Add commit pause to debug slow path
+	// Send commit messages to other replicas and ignore thrifty
+	r.Broadcast(pb.WrapCommitRequest(r.Name, &pb.CommitRequest{Inst: inst}), true)
+
+	// Mark the instance as executed and prepare to execute it
+	inst.Status = pb.Status_COMMITTED
+
+	// TODO: move response to client to execute thread
+	for _, op := range inst.Ops {
+		r.clients[op.Request] <- &pb.ProposeReply{Success: true}
+		delete(r.clients, op.Request)
+	}
 }
 
 //===========================================================================

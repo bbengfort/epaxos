@@ -66,9 +66,10 @@ func New(options *Config) (replica *Replica, err error) {
 	// Create and initialize the replica
 	replica = new(Replica)
 	replica.config = config
+	replica.quorum = config.GetQuorum()
 	replica.thrifty = config.GetThrifty()
 	replica.clients = make(map[uint64]chan *pb.ProposeReply)
-	// replica.log = NewLog(replica)
+	replica.logs = NewLog(config)
 	// replica.Metrics = NewMetrics()
 
 	// Create the local replica definition

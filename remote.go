@@ -33,7 +33,7 @@ type Remote struct {
 }
 
 // Remotes is a collection of remote peers that must be ordered by PID
-type Remotes map[uint16]*Remote
+type Remotes map[uint32]*Remote
 
 //===========================================================================
 // External Interface

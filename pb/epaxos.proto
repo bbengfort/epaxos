@@ -24,15 +24,15 @@ enum AccessType {
 // An Instance is a log record for a specific replica that contains operations that
 // will be applied to the key-value store. Instances are the atomic unit of consensus.
 message Instance {
-    int64 replica = 1;             // the replica the instance originated at
-    int64 slot = 2;                // index of the replica's log the instance is placed
-    int64 seq = 3;                 // sequence number for applying commands
-    repeated int64 deps = 4;       // dependencies for each position in all other replica logs
+    uint32 replica = 1;            // the replica the instance originated at
+    uint64 slot = 2;               // index of the replica's log the instance is placed
+    uint64 seq = 3;                // sequence number for applying commands
+    map<uint32, uint64> deps = 4;  // dependencies for each replica in the logs
     Status status = 5;             // the status of consensus for this instance
-    int32 acks = 6;                // number of replies from replicas for the given status
+    uint32 acks = 6;               // number of replies from replicas for the given status
     bool changed = 7;              // if a remote replica has updated the instance
     bool reads = 8;                // if the instance contains any read operations (blocking)
-    int64 visited = 9;             // mark visited during graph traversal for execution
+    uint64 visited = 9;            // mark visited during graph traversal for execution
     repeated Operation ops = 10;   // the operations to be applied by this instance
 }
 
@@ -41,7 +41,7 @@ message Operation {
     AccessType type = 1;           // the access type of the operation
     string key = 2;                // the name of the key to execute the access of
     bytes value = 3;               // the data associated with the access
-    int64 request = 4;             // index of the client request for the leader to respond
+    uint64 request = 4;            // index of the client request for the leader to respond
 }
 
 // Send a preaccept request from leader to remote peers for the given instance.
@@ -51,9 +51,9 @@ message PreacceptRequest {
 
 // Reply with the preaccept status and if any conflicts are detected.
 message PreacceptReply {
-    int64 slot = 1;               // the slot of the instance being pre-accepted (for retrieval from the log at the leader)
-    int64 seq = 2;                // the maximal sequence value of the remote for sequence resolution
-    repeated int64 deps = 3;      // dependencies found at the remote peer
+    uint64 slot = 1;              // the slot of the instance being pre-accepted (for retrieval from the log at the leader)
+    uint64 seq = 2;               // the maximal sequence value of the remote for sequence resolution
+    map<uint32, uint64> deps = 3; // dependencies found at the remote peer
     bool changed =4;              // whether the sequence or dependencies have changed indicating a conflict
 }
 
@@ -64,7 +64,7 @@ message AcceptRequest {
 
 // Reply with accept status
 message AcceptReply {
-    int64 slot = 1;               // the slot of the instance being accepted (for retrieval from the log at the leader)
+    uint64 slot = 1;              // the slot of the instance being accepted (for retrieval from the log at the leader)
 }
 
 // Alert all peers that the specified instance has been committed.
@@ -74,21 +74,21 @@ message CommitRequest {
 
 // Peers can ack their commit, but in practice this message is not needed/used.
 message CommitReply {
-    int64 slot = 1;               // the slot of the instance being committed (for retrieval from the log at the leader)
+    uint64 slot = 1;              // the slot of the instance being committed (for retrieval from the log at the leader)
 }
 
 // Beacon messages are used to establish links and send local state to the remote as a
 // state-checking heartbeat to ensure consensus is working properly.
 message BeaconRequest {
-    bool quorumMember = 1;        // if the replica is part of the quorum (usually true)
-    int64 replica = 2;            // the replica id for log purposes
-    repeated int64 slots = 3;     // the current log index for each replica
-    repeated int64 commits = 4;   // the current commit index for each replica
+    bool quorumMember = 1;            // if the replica is part of the quorum (usually true)
+    uint32 replica = 2;               // the replica id for log purposes
+    map<uint32, uint64> slots = 3;    // the current log index for each replica
+    map<uint32, uint64> commits = 4;  // the current commit index for each replica
 }
 
 message BeaconReply {
-    bool quorumMember = 1;        // if the replica is part of the quorum (usually true)
-    int64 replica = 2;            // the replica id for log purposes
-    repeated int64 slots = 3;     // the current log index for each replica
-    repeated int64 commits = 4;   // the current commit index for each replica
+    bool quorumMember = 1;            // if the replica is part of the quorum (usually true)
+    uint32 replica = 2;               // the replica id for log purposes
+    map<uint32, uint64> slots = 3;    // the current log index for each replica
+    map<uint32, uint64> commits = 4;  // the current commit index for each replica
 }

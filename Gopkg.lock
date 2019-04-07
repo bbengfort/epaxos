@@ -11,14 +11,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3390d9e320cc4bf80c6525985903772748854ba32c6d4ddf19a7f260b3e20b52"
+  digest = "1:b920ef3a82c675d18d5a2394b82f40f8bd71aee0fc098b537ea1e91c3d8cf7e5"
   name = "github.com/bbengfort/x"
   packages = [
     "noplog",
     "peers",
   ]
   pruneopts = "UT"
-  revision = "35255fd288d0e8314c6be637d738b68f85b2bc13"
+  revision = "575298b4804963ffa28def91326b660c7a400666"
 
 [[projects]]
   digest = "1:bbc4aacabe6880bdbce849c64cb061b7eddf39f132af4ea2853ddd32f85fbec3"

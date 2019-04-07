@@ -158,7 +158,7 @@ func (c *Config) GetRemotes() (remotes []peers.Peer, err error) {
 // GetThrifty returns the peers to send broadcast messages to. If not thrifty, it
 // returns nil, otherwise it returns the next n peers by PID where n is one less than
 // the majority of replicas.
-func (c *Config) GetThrifty() []uint16 {
+func (c *Config) GetThrifty() []uint32 {
 	if !c.Thrifty {
 		return nil
 	}
@@ -170,7 +170,7 @@ func (c *Config) GetThrifty() []uint16 {
 	}
 
 	// Create a sorted list of PIDs
-	pids := make([]uint16, 0, len(c.Peers))
+	pids := make([]uint32, 0, len(c.Peers))
 	for _, peer := range c.Peers {
 		pids = append(pids, peer.PID)
 	}
@@ -189,13 +189,19 @@ func (c *Config) GetThrifty() []uint16 {
 
 	// Determine 1 less than the majority thrifty peers
 	n := len(pids) / 2
-	thrifty := make([]uint16, 0, n)
+	thrifty := make([]uint32, 0, n)
 	for i := 1; i <= n; i++ {
 		thrifty = append(thrifty, pids[(idx+i)%len(pids)])
 	}
 
 	// Return the thrifty peers
 	return thrifty
+}
+
+// GetQuorum returns the number of replicas required for a quourm based on the
+// peers defined in the configuration.
+func (c *Config) GetQuorum() uint32 {
+	return uint32((len(c.Peers) / 2) + 1)
 }
 
 // GetPath searches possible configuration paths returning the first path it
